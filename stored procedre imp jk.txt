@@ -1,0 +1,485 @@
+USE [Medici]
+GO
+
+/****** Object:  StoredProcedure [dbo].[GetAdvancedsearchDataForUI]    Script Date: 10.11.2025 11:20:58 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE procedure [dbo].[GetAdvancedsearchDataForUI]                           
+@CBWOrderNo VARCHAR(50),      
+ @CBWClientNo VARCHAR(MAX),      
+ @ClientName VARCHAR(MAX),      
+ @PSEProjectNo VARCHAR(80),      
+ @MediciNo VARCHAR(100),      
+ @StatusID VARCHAR(max),      
+ @RegionID VARCHAR(max),      
+ @DepartmentIDs VARCHAR(MAX),      
+ @ProjectTypeID VARCHAR(5),      
+ @StandardIDs VARCHAR(MAX),      
+ @ProductAreas VARCHAR(MAX),      
+ @PHLoginID VARCHAR(50),      
+ @LTCLoginID VARCHAR(50),                                                                                                                                                                                                                                      
+ @STCLoginID VARCHAR(50),                                                                                                                                                                                                                                      
+ @CertExpiryFromDt VARCHAR(100),                      
+ @CertExpiryToDt VARCHAR(100),                                       
+ @RegistrationFromDt VARCHAR(100),                                             
+ @RegistrationToDt VARCHAR(100),                                 
+ @ReviewFromDt VARCHAR(100),                                   
+ @ReviewToDt VARCHAR(100),                                     
+ @DecisionFromDt VARCHAR(100),                              
+ @DecisionToDt VARCHAR(100),                                                                  
+ @IncludeClosedProjects BIT,                                                                                                      
+ @OnlyClosedProjects BIT,                                                                                                           
+ @IncludeSpecialProjects BIT,                                                                                                            
+ @OnlySpecialProjects BIT,                                                                                                                                  
+ @NextFollowupFromDt VARCHAR(100),                                                                                                                                                       
+ @NextFollowupToDt VARCHAR(100),                                                                                                       
+ @LeadAuditorLoginID VARCHAR(50),                                                                                                                                                              
+ @AuditorLoginID VARCHAR(50),                                                                                                                                                         
+ @ApplicableCB VARCHAR(50),                                                                                           
+ @TRLoginID VARCHAR(50) = NULL,                                                                                                          
+ @MHSARLoginID VARCHAR(50)= NULL,                                                                                                        
+ @MHSARReviewFromDt VARCHAR(50)=NULL,                                                                                                    
+ @MHSARReviewToDt VARCHAR(50)=NULL,                                                                                          
+ @TRReviewFromDt VARCHAR(100) = NULL,                                                                                                                                                                                              
+ @TRReviewToDt VARCHAR(100) = NULL,                                                                                                                                                                                     
+ @CertificateNo NVARCHAR(3000) = NULL,                        
+ @LastAuditFromDate VARCHAR(100)=NULL,                                                      
+ @LastAuditToDate VARCHAR(100)=NULL,                                                                                                                                                                                                   
+ @AdminReviewFromDate VARCHAR(100)=NULL,                                                                                                                                                                                                      
+ @AdminReviewToDate VARCHAR(100)=NULL,                                                                                                                                                                                                      
+ @FinalReviewFromDate VARCHAR(100)=NULL,                                              
+ @FinalReviewToDate VARCHAR(100)=NULL,                                                  
+ @CertificateReviewFromDate VARCHAR(100)=NULL,                                                
+ @CertificateReviewToDate VARCHAR(100)=NULL,                                                                             
+ @REPSUploadFromDate VARCHAR(100)=NULL,                                                  
+ @REPSUploadToDate VARCHAR(100)=NULL,                                                                       
+ @ArchivalFromDate VARCHAR(100)=NULL,                                                                                                      
+ @ArchivalToDate VARCHAR(100)=NULL,
+ @AdminReviewer VARCHAR(50) = NULL,                                        
+ @FinalReviewer VARCHAR(50) = NULL,                                                                         
+ @CertificateReviewer VARCHAR(50) = NULL,                                                                                                                                
+ @countValue VARCHAR(50),                                                                                                                                                                  
+ @MaintenanceRCrtDateFrom VARCHAR(100) = NULL,                                                                                                                                                                          
+ @MaintenanceRCrtDateTo VARCHAR(100) = NULL,                                                                                                                                                                
+ @MaintenanceReviewFromDate VARCHAR(100) = NULL,                                                                                                                                                                            
+ @MaintenanceReviewToDate VARCHAR(100) = NULL  ,                                                                                                                                               
+ @SurveillanceReviewRequired varchar(10),                                                                                                                                                                                                                     
+ @ExpiredDeadlineProjects BIT,                                                      
+ @IncludeFinalArchiveProjects BIT,                        
+ @IncludeCorrectionProjects BIT,                           
+ @GLAManagers VARCHAR(MAX),
+ @CompletionFromDate VARCHAR(100)=NULL,                                                                                                                                                
+ @CompletionToDate VARCHAR(100)=NULL
+ AS                            
+ BEGIN                            
+   IF @OnlySpecialProjects <> 1                        
+   BEGIN                        
+  WITH ProjectStatusesFromProjects_History AS (
+    SELECT 
+        ph.ProjectID,
+        ph.StatusID,
+        ph.Modified,
+        ph.[Version],
+        LEAD(ph.StatusID) OVER (
+            PARTITION BY ph.ProjectID 
+            ORDER BY ph.Modified DESC, ph.[Version] DESC
+        ) AS NextStatusID
+    FROM Projects_History ph WITH (NOLOCK)
+    JOIN Projects p WITH (NOLOCK) ON p.ProjectID = ph.ProjectID
+    WHERE 
+        ph.StatusID IS NOT NULL 
+        AND ISNULL(p.IsDeleted, 0) = 0  
+        AND ph.StatusID != 99
+), 
+PreviousandCurrentStatusFromProjects_History AS (
+    SELECT 
+        ProjectID,
+        StatusID,
+        Modified,
+        [Version],
+        ROW_NUMBER() OVER (
+            PARTITION BY ProjectID 
+            ORDER BY Modified DESC, [Version] DESC
+        ) AS RowNum
+    FROM ProjectStatusesFromProjects_History
+    WHERE StatusID <> NextStatusID OR NextStatusID IS NULL
+)
+SELECT 
+    ProjectID,
+    StatusID,
+    Modified
+INTO #Temp_MaxModified_ProjectHistory
+FROM PreviousandCurrentStatusFromProjects_History
+WHERE RowNum = 1;                       
+  SELECT DISTINCT P.ProjectID,                          
+  ISNULL(P.ParentProjectID,0) as [ParentProjectID],                        
+  ISNULL(P.MediciNo,'') as[MediciNo],                                                                                                                           
+  ISNULL(P.CBWOrderNo,'') as[CBWOrderNo],                                                       
+  isnull(PT.Description,'') as [ProjectType],                                                                                                                                           
+  isnull(S.Description,'') as [STDDescription],                                                                                                                                                                                                  
+  ISNULL(P.StatusID, 0) AS [StatusID],                                                                                                                         
+  isnull(Status,'') as [Status],                                                                                          
+  isnull(P.ClientNumber,'') as [ClientNumber],                                                                      
+  isnull(P.CompanyName,'') as [CompanyName],                                                                                                                      
+  ISNULL(Reg.RegionName,'') as [RegionName],                   
+  isnull(DepartmentName,'') as [Department],                                       
+  isnull(PHUSR.UserName,'') as [ProjectHandler],                                    
+  ISNULL(CONVERT(varchar(10),P.CertificateExpirationDate,126),'')  AS [CertificateExpirationDate],                                                                                                             
+ (CASE WHEN P.ApplicableCB <> 'UCB' AND TC1RESUSR.UserName IS NULL AND TC1USR.UserName IS NOT NULL THEN   TC1USR.UserName
+	WHEN  P.ApplicableCB <> 'UCB' AND TC1USR.UserName IS NULL AND TC1RESUSR.UserName IS NOT NULL 
+        THEN TC1RESUSR.UserName + ' (ResRev)' END )	 as [TC1],
+
+		(CASE WHEN P.ApplicableCB <> 'UCB' AND TC2RESUSR.UserName IS NULL AND TC2USR.UserName IS NOT NULL THEN   TC2USR.UserName
+	WHEN  P.ApplicableCB <> 'UCB' AND TC2USR.UserName IS NULL AND TC2RESUSR.UserName IS NOT NULL 
+        THEN TC2RESUSR.UserName + ' (ResRev)' END )	 as [TC2],                                
+  ISNULL(P.ApplicableCB,'') as [ApplicableCB],                                
+  ISNULL(P.Indicator, '') AS [ProductArea],                                                                          
+  CAST(0 as BIT) AS [IsSpecial],                          
+  ISNULL(ABS(DATEDIFF(dd, P.DateofSubmission, getdate())),'') as [DaysInMedici],                         
+  ISNULL(ABS(DATEDIFF(dd, (PH.Modified), getdate())),'') as DaysInCurrentStatus,                            
+  ISNULL(CONVERT(varchar(10),P.DateofSubmission,126),'') as [DateofSubmission],                                                                                                                          
+  ISNULL(CONVERT(varchar(10),P.LastAuditDay,126),'') as [LastAuditDay],                                                                                            
+  ISNULL(P.CertificateNumber, '') AS [CertificateNumber],                                                                                                  
+  (SELECT isnull(((select substring(replace(replace(tbl.ids,'<T>',''),'</T>',';'),0,len(replace(replace(tbl.ids,'<T>',''),'</T>',',')))                                                                                                                       
+  from (select T.T from (select DISTINCT MDCode from mstMDCodes WITH(NOLOCK) where MDCodeId in (select value from funcListToTableVarchar(P.MDCodes, ';'))) as T(T) for xml path('')) as tbl(ids))),'')) as [MDCodes],                                          
+  ISNULL(DisappearanceDate, '') as DisappearanceDate,                                                                      
+  '' as [Deadline],                        
+  CASE 
+    WHEN MHSAR_RESUSR.UserName IS NULL AND MHSAR_USR.UserName IS NOT NULL 
+        THEN MHSAR_USR.UserName
+    WHEN MHSAR_USR.UserName IS NULL AND MHSAR_RESUSR.UserName IS NOT NULL 
+        THEN MHSAR_RESUSR.UserName + ' (ResRev)'
+    ELSE ''
+END AS [MHSAR],
+CASE
+  WHEN TR_RESUSR.UserName IS NULL AND TR_USR.UserName IS NOT NULL
+       THEN TR_USR.UserName
+  WHEN TR_USR.UserName IS NULL AND TR_RESUSR.UserName IS NOT NULL
+       THEN TR_RESUSR.UserName + ' (ResRev)'
+  ELSE ''
+END AS [TechnicalReviewer],
+   CASE 
+   WHEN RESARUSR.UserName IS NULL AND ARUSR.UserName IS NOT NULL
+       THEN ARUSR.UserName
+  WHEN ARUSR.UserName IS NULL AND RESARUSR.UserName IS NOT NULL
+       THEN RESARUSR.UserName + ' (ResRev)'
+  ELSE ''
+END AS AdminReviewer,
+ CASE 
+   WHEN RESFRUSR.UserName IS NULL AND FRUSR.UserName IS NOT NULL
+       THEN FRUSR.UserName
+  WHEN FRUSR.UserName IS NULL AND RESFRUSR.UserName IS NOT NULL
+       THEN RESFRUSR.UserName + ' (ResRev)'
+  ELSE ''
+END AS FinalReviewer,    
+CASE 
+   WHEN RESCRUSR.UserName IS NULL AND CRUSR.UserName IS NOT NULL
+       THEN CRUSR.UserName
+  WHEN CRUSR.UserName IS NULL AND RESCRUSR.UserName IS NOT NULL
+       THEN RESCRUSR.UserName + ' (ResRev)'
+  ELSE ''
+END AS CertificateReviewer,               
+  ISNULL(GLAUSR.UserName,'') AS GLAManager                
+into #CRTUKUCBProjects                        
+FROM Projects P WITH (NOLOCK)                             
+LEFT JOIN #Temp_MaxModified_ProjectHistory PH on PH.ProjectID = P.ProjectID                 
+LEFT JOIN ProjectDetails PD WITH (NOLOCK) ON P.ProjectID = PD.ProjectID                 
+LEFT JOIN mstDepartments D WITH (NOLOCK) ON P.DepartmentID=D.DepartmentID                 
+LEFT  JOIN mstProjectStatus PS WITH (NOLOCK) ON P.StatusID=PS.StatusID                 
+LEFT  JOIN mstProjectTypes PT WITH (NOLOCK) ON P.ProjectTypeID=PT.ProjectTypeID                 
+LEFT  JOIN mstStandards S WITH (NOLOCK) ON P.StandardID=S.StandardID                 
+LEFT JOIN mstRelationshipManager GLA WITH (NOLOCK) ON P.GlobalManagerID = GLA.ID                
+LEFT  JOIN CR S1R WITH (NOLOCK) ON P.ProjectID=S1R.ProjectID                 
+LEFT  JOIN CD S2R WITH (NOLOCK) ON P.ProjectID=S2R.ProjectID                 
+inner join mstRegions Reg WITH (NOLOCK) ON Reg.RegionID=P.RegionID                 
+LEFT  JOIN mstPriorityColor PC WITH (NOLOCK) ON P.Priority=PC.Priority                 
+LEFT  JOIN mstTCLocations LOC WITH (NOLOCK) on P.LocationID=LOC.LocationID                 
+LEFT  JOIN mstMediciUsers TC1USR WITH (NOLOCK) on S1R.TC1 = TC1USR.LoginID  
+LEFT  JOIN mstMediciUsers TC1RESUSR WITH (NOLOCK) on S1R.ReservedReviewer = TC1RESUSR.LoginID
+LEFT JOIN mstMediciUsers TC1UCBUSR WITH (NOLOCK) on S1R.TC1UCB = TC1UCBUSR.LoginID                                                                                                                 
+LEFT JOIN mstMediciUsers TC2USR WITH (NOLOCK) on S2R.TC2 = TC2USR.LoginID     
+LEFT JOIN mstMediciUsers TC2RESUSR WITH (NOLOCK) on S2R.ReservedReviewer = TC2RESUSR.LoginID 
+LEFT JOIN  mstMediciUsers PHUSR WITH (NOLOCK) on P.ProjectHandler=PHUSR.LoginID                                                                                                
+LEFT JOIN TR S3R WITH (NOLOCK) ON P.ProjectID = S3R.ProjectID       
+LEFT JOIN mstMediciUsers GLAUSR WITH (NOLOCK) ON GLAUSR.LoginID = GLA.ManagerId                
+LEFT JOIN mstMediciUsers TR_USR WITH (NOLOCK) ON TR_USR.LoginID = S3R.TR  
+LEFT JOIN mstMediciUsers TR_RESUSR WITH (NOLOCK) ON TR_RESUSR.LoginID = S3R.ReservedReviewer 
+LEFT JOIN MHSAR S4R WITH (NOLOCK) ON P.ProjectID = S4R.ProjectID                                                                                                        
+LEFT JOIN mstMediciUsers MHSAR_USR WITH (NOLOCK) ON MHSAR_USR.LoginID = S4R.MHSAR   
+LEFT JOIN mstMediciUsers MHSAR_RESUSR WITH (NOLOCK) ON MHSAR_RESUSR.LoginID = S4R.ReservedReviewer
+LEFT OUTER JOIN UCBReviews AR WITH (NOLOCK) ON P.ParentProjectID=AR.ProjectID AND AR.ReviewTypeID in (1,11)                                   
+LEFT OUTER JOIN UCBReviews FR WITH (NOLOCK) ON P.ParentProjectID=FR.ProjectID AND FR.ReviewTypeID in(5)                                                
+LEFT OUTER JOIN UCBReviews MR WITH (NOLOCK) ON P.ParentProjectID=MR.ProjectID AND MR.ReviewTypeID in(12)                                         
+LEFT OUTER JOIN UCBReviews CR WITH (NOLOCK) ON P.ParentProjectID=CR.ProjectID AND CR.ReviewTypeID=6                                                                                    
+LEFT OUTER JOIN mstMediciUsers ARUSR WITH (NOLOCK) on AR.Reviewer=ARUSR.LoginID     
+LEFT OUTER JOIN mstMediciUsers RESARUSR WITH (NOLOCK) on AR.ReservedReviewer=RESARUSR.LoginID
+LEFT OUTER JOIN mstMediciUsers FRUSR WITH (NOLOCK) on FR.Reviewer=FRUSR.LoginID     
+LEFT OUTER JOIN mstMediciUsers RESFRUSR WITH (NOLOCK) on FR.ReservedReviewer=RESFRUSR.LoginID 
+LEFT OUTER JOIN mstMediciUsers MRUSR WITH (NOLOCK) on MR.Reviewer=MRUSR.LoginID                                                
+LEFT OUTER JOIN mstMediciUsers CRUSR WITH (NOLOCK) on CR.Reviewer=CRUSR.LoginID  
+LEFT OUTER JOIN mstMediciUsers RESCRUSR WITH (NOLOCK) on CR.ReservedReviewer=RESCRUSR.LoginID 
+where P.StatusID > 2 and isnull(P.ParentProjectID,0) <> 0 AND ISNULL(P.IsDeleted, 0) = 0                                                                                                                             
+AND P.StatusID NOT IN (26,27,28,65,100,101)                             
+and (@ApplicableCB = '' OR P.ApplicableCB = @ApplicableCB)                        
+and (@OnlyClosedProjects = 0 OR P.StatusID IN(9, 13, 14, 15, 16, 17, 18, 19, 20, 21,25,60,61,62,63,64,110,111,112,113,114,115,116,117,118,124,125,126,127,128,129))                        
+and ((@IncludeClosedProjects = 1 OR @OnlyClosedProjects = 1) OR (@IncludeCorrectionProjects = 1 and P.StatusID in (124,126,128)) OR P.StatusID NOT IN (9, 13, 14, 15, 16, 17, 18, 19, 20, 21,25,60,61,62,63,64,110,111,112,113,114,115,116,117,118,124,125,    126,127,128,129))             
+and (@MediciNo = '' OR P.MediciNo like '%'+@MediciNo+ '%')             
+and (@ProjectTypeID = '' OR P.ProjectTypeID = @ProjectTypeID)                
+and (@StandardIDs = '' OR P.StandardID in (@StandardIDs))                             
+and (@LTCLoginID = '' OR S1R.TC1 = @LTCLoginID)                             
+and (@PHLoginID = '' OR P.ProjectHandler = @PHLoginID)                             
+and (@LTCLoginID = '' OR S1R.TC1 = @LTCLoginID)                             
+and (@STCLoginID = '' OR S2R.TC2 = @STCLoginID)                         
+and (@LeadAuditorLoginID = '' OR P.LeadAuditor = @LeadAuditorLoginID)                             
+and (@AuditorLoginID = '' OR P.Auditor = @AuditorLoginID)                             
+and (@CBWOrderNo = '' OR P.CBWOrderNo like '%'+@CBWOrderNo+ '%')                             
+and (@CBWClientNo = '' OR P.ClientNumber like '%'+@CBWClientNo+'%')                             
+and (@ClientName = '' OR P.CompanyName like  '%'+@ClientName+'%')                             
+and (@RegionID = '' OR P.RegionID IN (SELECT CAST(value AS TINYINT) FROM FunclisttotableInt(@RegionID, ',')))                            
+and (@PSEProjectNo = '' OR P.PSEProjectNo  like '%'+ @PSEProjectNo+'%')                             
+and (@DepartmentIDs = '' OR P.DepartmentID in(@DepartmentIDs))                  
+and (@GLAManagers = '' OR P.GlobalManagerID in(@GLAManagers))                             
+and (@CertificateNo = '' OR P.CertificateNumber LIKE '%'+ @CertificateNo +'%')                            
+AND (@ProductAreas = '' OR EXISTS (SELECT 1 FROM funcListToTableVarchar(P.indicator, ',') AS indicators WHERE indicators.value IN (SELECT ProductAreaNames.value FROM funcListToTableVarchar(@ProductAreas, ',') AS ProductAreaNames)))      
+and (@CertExpiryFromDt = '' OR CAST(P.CertificateExpirationDate AS DATETIME) >= CAST('' + @CertExpiryFromDt + '' AS DATETIME))                             
+and (@ReviewFromDt = '' OR CAST(P.LastDayofEvaluation AS DATE) >= CAST('' + @ReviewFromDt + '' AS DATE) )                             
+and (@ReviewToDt = '' OR CAST(P.LastDayofEvaluation AS DATE) <= CAST('' + @ReviewToDt + '' AS DATE))                             
+and (@DecisionFromDt = '' OR CAST(P.LastDayofDecisionReview AS DATE) >= CAST('' + @DecisionFromDt + '' AS DATE))                             
+and (@DecisionToDt = '' OR CAST(P.LastDayofDecisionReview AS DATE) <= CAST('' + @DecisionToDt + '' AS DATE))                             
+and (@TRLoginID = '' OR S3R.TR = @TRLoginID)                             
+and (@MHSARLoginID = '' OR S4R.MHSAR = @MHSARLoginID)                             
+and (@MHSARReviewFromDt = '' OR CAST(P.LastDayofARReview AS DATE) >= CAST('' + @MHSARReviewFromDt + '' AS DATE))                             
+and (@MHSARReviewToDt = '' OR CAST(P.LastDayofARReview AS DATE) <= CAST('' + @MHSARReviewToDt + '' AS DATE)) and (@TRReviewFromDt = '' OR CAST(P.LastDayofTRReview AS DATE) >= CAST('' + @TRReviewFromDt + '' AS DATE))                             
+and (@TRReviewToDt = '' OR CAST(P.LastDayofTRReview AS DATE) <= CAST('' + @TRReviewToDt + '' AS DATE))                             
+and (@AdminReviewer = '' OR AR.Reviewer = @AdminReviewer)                             
+and (@FinalReviewer = '' OR (FR.Reviewer =  @FinalReviewer OR MRUSR.LoginID =  @FinalReviewer))                             
+and (@CertificateReviewer = '' OR CR.Reviewer =  @CertificateReviewer)                          
+and (@StatusID not in ('200','300') OR (@StatusID in ('200','300') and P.StatusID in (5,103) and P.ProjectTypeId in(select CAST(ProjectTypeId AS nvarchar) from mstProjectTypes WITH(NOLOCK) where Category='Application Review')))                            
+and (@StatusID not in ('201','301') OR (@StatusID in ('201','301') and P.StatusID in (6,104) and P.ProjectTypeId in(select CAST(ProjectTypeId AS nvarchar) from mstProjectTypes WITH(NOLOCK) where Category='Application Review')))                            
+and (@StatusID not in ('202','302') OR (@StatusID in ('202','302') and P.StatusID in (7,105) and P.ProjectTypeId in(select CAST(ProjectTypeId AS nvarchar) from mstProjectTypes WITH(NOLOCK) where Category='Application Review')))                            
+and (@StatusID in ('200','300','201','301','202','302') OR @StatusID = '' OR P.StatusID in (cast(@StatusID as int)))                             
+and (@CertExpiryToDt = '' OR P.CertificateExpirationDate IS NOT NULL and  CAST(P.CertificateExpirationDate AS DATE) <= CAST('' + @CertExpiryToDt + '' AS DATE))                             
+and (@RegistrationFromDt = '' OR CAST(P.DateOfSubmission AS DATE) >= CAST('' + @RegistrationFromDt + '' AS DATE))                             
+and (@RegistrationToDt = '' OR CAST(P.DateOfSubmission AS DATE) <= CAST('' + @RegistrationToDt + '' AS DATE))                             
+and (@LastAuditToDate = '' OR CAST(P.LastAuditDay AS DATE) <= CAST('' + @LastAuditToDate + '' AS DATE))                        
+and (@LastAuditFromDate = '' OR CAST(P.LastAuditDay AS DATE) >= CAST('' + @LastAuditFromDate + '' AS DATE))                             
+and (@AdminReviewFromDate = '' OR CAST(PD.UCB_AdminReviewDate AS DATE) >= CAST('' + @AdminReviewFromDate  + '' AS DATE))                             
+and (@AdminReviewToDate = '' OR CAST(PD.UCB_AdminReviewDate AS DATE) <= CAST('' + @AdminReviewToDate  + '' AS DATE))                             
+and (@MaintenanceReviewFromDate = '' OR CAST(PD.UCB_MaintenanceReviewDate AS DATE) >= CAST('' + @MaintenanceReviewFromDate  + '' AS DATE))          
+and (@MaintenanceReviewToDate = '' OR CAST(PD.UCB_MaintenanceReviewDate AS DATE) <= CAST('' + @MaintenanceReviewToDate  + '' AS DATE))                             
+and (@FinalReviewFromDate = '' OR CAST(PD.UCB_FinalReviewDate AS DATE) >= CAST('' + @FinalReviewFromDate   + '' AS DATE))                             
+and (@FinalReviewToDate = '' OR CAST(PD.UCB_FinalReviewDate AS DATE) <= CAST('' + @FinalReviewToDate  + '' AS DATE))                             
+and (@CertificateReviewFromDate = '' OR CAST(PD.UCB_CertificateReviewDate AS DATE) >= CAST('' + @CertificateReviewFromDate  + '' AS DATE))                             
+and (@CertificateReviewToDate = '' OR CAST(PD.UCB_CertificateReviewDate AS DATE) <= CAST('' + @CertificateReviewToDate  + '' AS DATE))                             
+and (@REPSUploadFromDate = '' OR CAST(PD.REPSUploadDate AS DATE) >= CAST('' + @REPSUploadFromDate  + '' AS DATE))                             
+and (@REPSUploadToDate = '' OR CAST(PD.REPSUploadDate AS DATE) <= CAST('' + @REPSUploadToDate  + '' AS DATE))                             
+and (@ArchivalFromDate = '' OR CAST(PD.ArchivedDate AS DATE) >= CAST('' + @ArchivalFromDate  + '' AS DATE))                             
+and (@ArchivalToDate = '' OR CAST(PD.ArchivedDate AS DATE) <= CAST('' + @ArchivalToDate  + '' AS DATE))     
+and (@CompletionFromDate = '' OR (CAST(P.DisappearanceDate AS DATE) >= CAST('' + @CompletionFromDate  + '' AS DATE) and PS.ActiveStatusID in (5,8)))                           
+and (@CompletionToDate = '' OR (CAST(P.DisappearanceDate AS DATE) <= CAST('' + @CompletionToDate  + '' AS DATE) and PS.ActiveStatusID in (5,8)))
+and (@MaintenanceRCrtDateFrom = '' OR CAST(PD.MaintenanceCertReleaseDate AS DATE) >= CAST('' + @MaintenanceRCrtDateFrom  + '' AS DATE))                             
+and (@MaintenanceRCrtDateTo = '' OR CAST(PD.MaintenanceCertReleaseDate AS DATE) <= CAST('' + @MaintenanceRCrtDateTo  + '' AS DATE))                             
+and (@IncludeFinalArchiveProjects = 1 OR  ISNULL(P.ArchiveStatus,0) < 5)                          
+and (@SurveillanceReviewRequired not in ('1', '2') OR  (@SurveillanceReviewRequired = '1' and ISNULL(SurveillanceReviewRequired,0) = 1 and  ISNULL(P.StatusID,0) in (5,103))                          
+OR (@SurveillanceReviewRequired = '2' and ISNULL(SurveillanceReviewRequired,0) not in (1) and ISNULL(P.StatusID,0) in (5,103)))                        
+                        
+        
+END                        
+-- End of only closed projects                        
+IF(@OnlySpecialProjects = 1 OR @IncludeSpecialProjects = 1)                        
+BEGIN    
+WITH ProjectStatusesFromSpecialProjects_History AS (
+    SELECT 
+        ph.ProjectID,
+        ph.StatusID,
+        ph.Modified,
+        ph.[Version],
+        LEAD(ph.StatusID) OVER (
+            PARTITION BY ph.ProjectID 
+            ORDER BY ph.Modified DESC, ph.[Version] DESC
+        ) AS NextStatusID
+    FROM SpecialProjects_history ph WITH (NOLOCK)
+    JOIN SpecialProjects p WITH (NOLOCK) ON p.ProjectID = ph.ProjectID
+    WHERE 
+        ph.StatusID IS NOT NULL 
+        AND ISNULL(p.IsDeleted, 0) = 0  
+        AND ph.StatusID != 99
+), 
+PreviousandCurrentStatusFromSpecialProjects_History AS (
+    SELECT 
+        ProjectID,
+        StatusID,
+        Modified,
+        [Version],
+        ROW_NUMBER() OVER (
+            PARTITION BY ProjectID 
+            ORDER BY Modified DESC, [Version] DESC
+        ) AS RowNum
+    FROM ProjectStatusesFromSpecialProjects_History
+    WHERE StatusID <> NextStatusID OR NextStatusID IS NULL
+)
+SELECT 
+    ProjectID,
+    StatusID,
+    Modified
+INTO #Temp_MaxModified_SpecialProjectHistory
+FROM PreviousandCurrentStatusFromSpecialProjects_History
+WHERE RowNum = 1;
+
+  select DISTINCT P.ProjectID,                           
+  0 as [ParentProjectID],                        
+    ISNULL(P.MediciNo,'') as[MediciNo],                                                                                                                           
+    ISNULL(P.CBWOrderNo,'') as[CBWOrderNo],                                                       
+    isnull(PT.Description,'') as [ProjectType],                                                                                                                                           
+   (SELECT Isnull (((SELECT Substring(Replace(Replace(tbl.ids, '<T>', ''), '</T>', ','), 0,Len(Replace(Replace(tbl.ids, '<T>', ''),'</T>', ',')))                                                           
+             FROM   (SELECT T . t                                                           
+                                            FROM   (SELECT Description                                                           
+                                                    FROM   mststandards WITH(NOLOCK)                                            
+                                                    WHERE  standardid IN (SELECT value FROM dbo.Funclisttotablevarchar(P.standardid, ','))) AS   T (t)                                                           
+     FOR xml path('')) AS tbl(ids))), ''))  AS [STDDescription],                         
+    ISNULL(P.StatusID, 0) AS [StatusID],                          
+    isnull(Status,'') as [Status],                                                                                          
+    isnull(P.ClientNumber,'') as [ClientNumber],                                                                      
+    isnull(P.CompanyName,'') as [CompanyName],                                                                                                                      
+    ISNULL(Reg.RegionName,'') as [RegionName],                                                                                           
+    isnull(DepartmentName,'') as [Department],                                                                                                                              
+    isnull(PHUSR.UserName,'') as [ProjectHandler],                                    
+    ISNULL(CONVERT(varchar(10),P.CertificateExpirationDate,126),'')  AS [CertificateExpirationDate],                                                                                                             
+'' as [TC1],                                                                                                                                                                                                                            
+    COALESCE(nullif(STC3.UserName,'') ,nullif(STC2.UserName,''),nullif(STC1.UserName,'')) as [TC2],                                
+    ISNULL(P.ApplicableCB,'') as [ApplicableCB],                                            
+    ISNULL(P.Indicator, '') AS [ProductArea],                                                                                                           
+    CAST(1 as BIT) AS [IsSpecial],                                  
+      ISNULL(ABS(DATEDIFF(dd, P.DateofSubmission, getdate())),'') as [DaysInMedici],                            
+    ISNULL(ABS(DATEDIFF(dd, (PH.Modified), getdate())),'') as DaysInCurrentStatus,                            
+   ISNULL(CONVERT(varchar(10),P.DateofSubmission,126),'') as [DateofSubmission],                                                                                                                          
+   ISNULL(CONVERT(varchar(10),P.LastAuditDay,126),'') as [LastAuditDay],                                                                                         
+   ISNULL(P.CertificateNumber, '') AS [CertificateNumber],                                                                                                  
+   ''  as [MDCodes],                                                                                      
+   ISNULL(DisappearanceDate, '') as DisappearanceDate,                                                                      
+    CASE                                                                              
+        WHEN DATEDIFF(day, Getdate(), ISNULL(MSD.Deadline, Getdate())) > 0 THEN + CAST(DATEDIFF(day, Getdate(), ISNULL(MSD.Deadline, Getdate())) AS VARCHAR(10))                                                                              
+        WHEN DATEDIFF(day, Getdate(), ISNULL(MSD.Deadline, Getdate())) < 0 THEN CAST(DATEDIFF(day, Getdate(), ISNULL(MSD.Deadline, Getdate())) AS VARCHAR(10))                                                                              
+        ELSE ''                                                    
+    END AS [Deadline],                        
+ '' AS [MHSAR],              
+ '' as [TechnicalReviewer],                         
+ '' AS AdminReviewer,                        
+ '' as [FinalReviewer],                        
+ '' AS [CertificateReviewer]  ,                
+   ISNULL(GLAUSR.UserName,'') AS GLAManager                
+                        
+  into #TempSpecialprojects                        
+    from specialprojects P    
+ LEFT JOIN #Temp_MaxModified_SpecialProjectHistory PH on PH.ProjectID = P.ProjectID    
+    LEFT JOIN  mstDepartments D WITH (NOLOCK) ON P.DepartmentID=D.DepartmentID                         
+ LEFT JOIN  mstSpecialprojectstatus PS WITH (NOLOCK) ON P.StatusID=PS.StatusID                         
+ LEFT JOIN  mstProjectTypes PT WITH (NOLOCK) ON P.ProjectTypeID=PT.ProjectTypeID                         
+ LEFT JOIN  mstRegions Reg WITH (NOLOCK) ON Reg.RegionID=P.RegionID                 
+ LEFT JOIN mstRelationshipManager GLA WITH (NOLOCK) ON P.GlobalManagerID = GLA.ID                
+ LEFT JOIN mstMediciUsers GLAUSR WITH (NOLOCK) ON GLAUSR.LoginID = GLA.ManagerId                
+    LEFT JOIN mstMediciUsers PHUSR WITH (NOLOCK) on P.ProjectHandler =PHUSR.LoginId                         
+ LEFT JOIN evaluations EVL WITH(NOLOCK) ON P.projectid = EVL.projectid                        
+    LEFT JOIN mstMediciUsers STC1 WITH (NOLOCK) on EVL.stc =STC1.LoginId                         
+    LEFT JOIN mstMediciUsers STC2 WITH (NOLOCK) on EVL.stcsecondeval =STC2.LoginId                         
+    LEFT JOIN mstMediciUsers STC3 WITH (NOLOCK) on EVL.stcfinaleval =STC3.LoginId                         
+ LEFT JOIN mstSpecialprojectDeadline MSD  WITH(NOLOCK) ON P.ProjectID = MSD.ProjectID                        
+ WHERE P.StatusID not in (1,2,40,41) and P.ProjectID IS NOT NULL AND ISNULL(P.IsDeleted, 0) = 0                        
+ and (@ApplicableCB = '' OR P.ApplicableCB = @ApplicableCB)                             
+ and (@MediciNo = '' OR P.MediciNo like '%'+@MediciNo+ '%')           
+ and (@CBWOrderNo = '' OR P.CBWOrderNo like '%'+@CBWOrderNo+ '%')                        
+ and (@ProjectTypeID = '' OR P.ProjectTypeID = @ProjectTypeID)                            
+ and (@StandardIDs = '' OR @StandardIDs in  (select value from FunclisttotableInt(P.StandardID, ',')))                         
+ and (@RegionID = '' OR P.RegionID IN (SELECT CAST(value AS TINYINT) FROM FunclisttotableInt(@RegionID, ',')))                             
+ and (@PSEProjectNo = '' OR P.PSEProjectNo  like '%'+ @PSEProjectNo+'%')                             
+ and (@DepartmentIDs = '' OR P.DepartmentID in(@DepartmentIDs))                    
+ and (@GLAManagers = '' OR P.GlobalManagerID in(@GLAManagers))                             
+ and (@CertificateNo = '' OR P.CertificateNumber LIKE '%'+ @CertificateNo +'%')                            
+ AND (@ProductAreas = '' OR EXISTS (SELECT 1 FROM funcListToTableVarchar(P.indicator, ',') AS indicators WHERE indicators.value IN (SELECT ProductAreaNames.value FROM funcListToTableVarchar(@ProductAreas, ',') AS ProductAreaNames)))      
+ and (@CBWClientNo = '' OR P.ClientNumber like '%'+@CBWClientNo+'%')                             
+ and (@ClientName = '' OR P.CompanyName like  '%'+@ClientName+'%')                          
+ and (@PHLoginID = '' OR P.ProjectHandler = @PHLoginID)                         
+ and (ISNULL(@OnlyClosedProjects, 0) = 0 OR P.StatusID in (12,13,111,24,25,26,27,28,29,51,52,53,54,55,56,57))                             
+ and ((ISNULL(@IncludeClosedProjects, 0) = 1 OR ISNULL(@OnlyClosedProjects, 0) = 1 ) OR P.StatusID NOT in (12,13,111,24,25,26,27,28,29,51,52,53,54,55,56,57))                             
+ and (@StatusID = '' OR P.StatusID in (select value from FunclisttotableInt(@StatusID, ',')))                        
+ and (@CertExpiryToDt = '' OR P.CertificateExpirationDate IS NOT NULL and  CAST(P.CertificateExpirationDate AS DATE) <= CAST('' + @CertExpiryToDt + '' AS DATE))                       
+ and (@CertExpiryToDt = '' OR P.CertificateExpirationDate IS NOT NULL and  CAST(P.CertificateExpirationDate AS DATE) <= CAST('' + @CertExpiryToDt + '' AS DATE))                             
+ and (@RegistrationFromDt = '' OR CAST(P.DateOfSubmission AS DATE) >= CAST('' + @RegistrationFromDt + '' AS DATE))                             
+ and (@RegistrationToDt = '' OR CAST(P.DateOfSubmission AS DATE) <= CAST('' + @RegistrationToDt + '' AS DATE))                     
+ and (@STCLoginID = '' OR COALESCE(nullif(EVL.STCFinalEval,'') ,nullif(EVL.STCSecondEval,''),nullif(EVL.STC,'')) = @STCLoginID)                  
+END                        
+                        
+ Declare @sql varchar(max)                                                
+                               
+  IF @countValue <> 'all'                        
+  BEGIN                        
+       IF @OnlySpecialProjects = 1                        
+    BEGIN                              
+        IF @ExpiredDeadlineProjects = 1                        
+     BEGIN                        
+        set @sql = 'SELECT top ' + @countValue + ' * FROM #TempSpecialprojects where Deadline < 0 and StatusID not in(24,25,26,27,28,29,51,52,53,54,55,56) ORDER BY DaysInCurrentStatus ASC'                        
+     END                        
+     ELSE                        
+     BEGIN                   
+        set @sql = 'SELECT top ' + @countValue + ' * FROM #TempSpecialprojects ORDER BY DaysInCurrentStatus ASC'                        
+     END                        
+                                 
+    END                        
+    ELSE IF @IncludeSpecialProjects = 1                        
+    BEGIN                        
+         set @sql = 'SELECT top ' + @countValue + ' *  from  (select * FROM #CRTUKUCBProjects Union select * from  #TempSpecialprojects) as T ORDER BY DaysInCurrentStatus ASC'                        
+    END                        
+    ELSE                        
+    BEGIN                        
+    set @sql = 'SELECT top ' + @countValue + ' * FROM #CRTUKUCBProjects ORDER BY DaysInCurrentStatus ASC'                        
+END                        
+  END                        
+  ELSE                        
+  BEGIN                       
+      IF @OnlySpecialProjects = 1                        
+    BEGIN                          
+       IF @ExpiredDeadlineProjects = 1                        
+     BEGIN                        
+        set @sql = 'SELECT * FROM #TempSpecialprojects where Deadline < 0 and StatusID not in(24,25,26,27,28,29,51,52,53,54,55,56) ORDER BY DaysInCurrentStatus ASC'                        
+     END                        
+     ELSE                        
+     BEGIN                        
+         set @sql = 'SELECT  * FROM #TempSpecialprojects'                        
+   END                        
+    END                        
+    ELSE IF @IncludeSpecialProjects = 1                        
+    BEGIN                        
+         set @sql = 'SELECT  *  from  (select * FROM #CRTUKUCBProjects Union select * from  #TempSpecialprojects) as T ORDER BY DaysInCurrentStatus ASC'                        
+    END                        
+    ELSE                        
+    BEGIN                        
+           set @sql = 'SELECT  * FROM #CRTUKUCBProjects ORDER BY DaysInCurrentStatus ASC'                        
+       END                        
+  END                        
+                       
+                        
+    EXEC (@sql)                      
+    IF OBJECT_ID('tempdb..#CRTUKUCBProjects') IS NOT NULL                
+BEGIN                
+    DROP TABLE #CRTUKUCBProjects;                
+END                
+IF OBJECT_ID('tempdb..#TempSpecialprojects') IS NOT NULL                
+BEGIN                
+    DROP TABLE #TempSpecialprojects;                
+END                
+IF OBJECT_ID('tempdb..#Temp_MaxModified_ProjectHistory') IS NOT NULL                
+BEGIN                
+    DROP TABLE #Temp_MaxModified_ProjectHistory;               
+END    
+IF OBJECT_ID('tempdb..#Temp_MaxModified_SpecialProjectHistory') IS NOT NULL                
+BEGIN                
+    DROP TABLE #Temp_MaxModified_SpecialProjectHistory;               
+END    
+
+ END
+GO
+

@@ -1,0 +1,1 @@
+The client was facing issues with existing reports, incorrect aggregations and data mismatches, along with performance bottlenecks in Power BI reports.  Additionally, new business requirements required building new reports and enhancing existing ones for better usability and insights.

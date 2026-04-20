@@ -1,0 +1,81 @@
+In my recent cybersecurity project, the client was facing an issue to analyze threat information because the data was coming from multiple security applications and landing in various SQL Server tables. Each time the team wanted to perform analysis, they had to manually join multiple complex tables, which was extremely time-consuming.
+
+Additionally, the client managed several customers, and analyzing customer billing, DevOps user stories, and Microsoft Sentinel logs required manually logging into each customer’s separate portal. This not only taking time but also created inconsistency in the analysis process.
+
+To solve this, we built centralized Power BI reports that combined all the data in one place. This made threat analysis and customer reporting much faster and easier.
+
+
+Roles and responsibilies
+
+Collected requirements from SOC teams and stakeholders.
+created clear and interactive Power BI visuals for threat monitoring and customer reporting.
+I explained to the Data Engineering team what fields I need for Power BI reporting, how the data should look, and any business rules that must be applied.
+
+
+overview:
+
+This project had two phases.
+
+Phase 1 – Customer Information & Reporting
+
+The client had multiple customers, and each customer had their own DevOps, Sentinel, and Log Analytics environments.
+The Data Engineering team collected this data and loaded the daily Sentinel logs and DevOps details into Azure Blob Storage.
+
+Using this data, I created Power BI reports to show:
+
+How many user stories were created for each customer
+
+Previous (backlog) user stories
+
+Who created the user stories and when
+
+The current status (Completed / Not Completed)
+
+Similarly, I built Power BI visuals to display Microsoft Sentinel alert details and their status.
+
+For customer cost and billing insights, the client provided M Query from Log Analytics.
+Using that query, I created Power BI visuals to show:
+
+Total resources used by each customer
+
+Cost and billing amount per customer
+
+Parameter-based filtering to compare customers easily
+
+
+phase 2: 
+
+in phase 2, we used the medallion architecture.
+
+
+As a BI Developer, I first understand the conceptual model to get a clear picture of all business entities.
+Then, based on reporting requirements, I work with the Data Architect to finalize the fields needed for Fact and Dimension tables.
+The Data Engineering team loads only those fields into the data warehouse
+
+while the data is already in the raw layer, when the DE team needs to started loading the data fron raw layer to gold i started working created the business 
+
+
+
+
+
+Nomura Research Institute is a global consulting and IT services company that helps organizations with business strategy and technology solutions.
+👉 “NRI helps companies by analyzing problems, giving business solutions, and building IT systems to implement those solutions.”
+
+
+
+✅ Do you need to explain fields to the Data Engineering team?
+
+Yes — but only the fields that are needed for reporting.
+
+You don’t need to explain every field in the database.
+You only explain:
+
+what data you need
+
+which columns are important
+
+how those fields should be used in reports
+
+any calculated logic or business rules
+
+any missing fields that you need for Power BI

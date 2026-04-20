@@ -1,0 +1,105 @@
+EXEC [map].[sp_LoadFactRate] @UnknownPersonKey, @UnknownProjectKey, @UnknownPracticeKey, @UnknownEmployeeTitleKey, @UnknownRoleKey 
+										, @UnknownDate, @RoleTypeWDProjectRole, @PMFinancialEndDate, @ProjectedStart 
+										
+					
+; WITH TotalProjectHours AS (SELECT D.Project_Id
+		, SUM(isnull(D.BillableHours,0)) [TotalHours]
+	FROM #tmpFixedFeeDated D
+	GROUP BY D.Project_Id)
+	, FixedFeeRates AS (SELECT R.Project_Id
+		, CONVERT(DECIMAL(16,4), R.Revenue/T.TotalHours) [BillRate]
+	FROM TotalProjectHours T 
+	JOIN #tmpFixedFeeRevenue R ON T.Project_Id = R.Project_Id)
+
+	SELECT D.Project_Id
+		, D.WorkerId
+		, D.[Date]
+		, D.BillableHours
+		, D.StandardCostRate
+		, D.FullyBurdenedCostRate
+		, R.BillRate
+		, W.ProjectRoleId
+	INTO #tmpStageFixeFeeRates
+	FROM FixedFeeRates R 
+	JOIN #tmpFixedFeeDated D ON R.Project_Id = D.Project_Id
+	LEFT JOIN #tmpResourceBillRatesDated W ON R.Project_Id = W.ProjectId AND D.WorkerId = W.WorkerId AND D.Date = W.Date
+	WHERE W.WorkerId IS NOT NULL
+		AND D.BillableHours IS NOT NULL;
+
+
+
+		EXEC [map].[sp_LoadFactAttainment];   --> [dbo].[sp_GetWorkdayAttainmentFinancialData] 
+		
+		SELECT ISNULL(A.Project_Id, P.Project_Id) [Project_Id] 
+					, D.MonthStart 
+					, ISNULL(SUM(ISNULL(A.BillableHours, P.Forecasted_Hours) * R.ContractRate), 0.00) [Revenue]
+					--, ISNULL(SUM(R.BillableHours * R.FullyBurdenedCostRate), 0.00) [Cost]
+					, SUM(ISNULL(R.BillableHours, 0) * ISNULL(R.FullyBurdenedCostRate, 0)) AS [Cost]
+				INTO #tmpTMRevenue
+				FROM stage.WorkdayProjectActualCosts A 
+				FULL JOIN stage.WorkdayProjectProjectedCosts P ON A.Project_Id = P.Project_Id AND A.WorkerId = P.WorkerId AND A.Reported_Date = P.[Date]
+				JOIN #tmpStageTMRates R ON ISNULL(A.Project_Id, P.Project_Id) = R.ProjectId AND ISNULL(A.WorkerId, P.WorkerId) = R.WorkerId AND ISNULL(A.Reported_Date, P.[Date]) = R.[Date] 
+				JOIN dbo.DimDate D ON ISNULL(A.Reported_Date, P.[Date]) = D.[Date]
+				GROUP BY ISNULL(A.Project_Id, P.Project_Id)
+					, D.MonthStart
+
+				print('having issue above query')
+				-- Apply Discounts
+				UPDATE TM SET TM.Revenue = TM.Revenue * (1.00 - ISNULL(PD.PercentAmount, 0.00)) 
+				FROM #tmpTMRevenue TM 
+				LEFT JOIN @ProjectDiscounts PD ON TM.Project_Id = PD.Fixed_Project_Id AND TM.MonthStart = PD.MonthStart
+
+		
+		
+		
+		
+		
+
+		EXEC [map].[sp_LoadFactProjectQuaterlyMargin] @PMFinancialEndDate; --dbo.sp_GetWorkdayAttainmentFinancialData 
+
+
+		EXEC [map].[sp_LoadFactProjectPlan] @UnknownSegmentKey, @UnknownAccountKey, @UnknownPracticeKey, @UnknownRoleKey, @UnknownPersonKey;
+		
+		MIN(ISNULL(PT.StartDate, '1900-01-01')) AS StartDate,
+    MAX(ISNULL(PT.EndDate, '1900-01-01')) AS EndDate,
+    SUM(ISNULL(PT.EstimatedHours,0)) AS EstimatedHours,
+	
+	
+		
+				EXEC [map].[sp_LoadFactProjectHealth] @UnknownSegmentKey, @UnknownAccountKey , @UnknownPracticeKey, @UnknownPersonKey, @UnknownDate;  -- two issues
+				
+				
+				SELECT F.ProjectKey
+		, P.ProjectStartDate
+		, P.ProjectEndDate
+		, MIN(D.StartDate) [StartDate]
+		, MAX(D.EndDate) [EndDate]
+	INTO #tmpGroupedPlans
+	FROM dbo.FactProjectPlanPhase F 
+		JOIN dbo.DimProjectPlanPhase D ON F.ProjectPlanPhaseKey = D.ProjectPlanPhaseKey
+		JOIN dbo.DimProject P ON F.ProjectKey = P.ProjectKey
+	GROUP BY F.ProjectKey
+			, P.ProjectStartDate
+			, P.ProjectEndDate
+
+
+WITH PTO AS (SELECT T.PersonKey, T.Date
+		FROM dbo.FactPersonTime T 
+		JOIN dbo.DimTime DT ON T.TimeKey = DT.TimeKey
+		WHERE DT.TimeType = 'PTO')
+	, MaxProjectForecastDates AS ( 
+		SELECT F.ProjectKey
+			, CASE WHEN MAX(ISNULL(PT.MaxPTODate,'19000101')) >  MAX(F.MaxDate) THEN MAX(isnull(PT.MaxPTODate,'19000101')) ELSE MAX(F.MaxDate) END [EndDate]
+		FROM dbo.FactProjectResourceForecast F 
+		JOIN dbo.DimProject P ON F.ProjectKey = P.ProjectKey
+		OUTER APPLY (SELECT MAX(PTO.Date) MaxPTODate FROM PTO WHERE PTO.[Date] BETWEEN P.ProjectStartDate AND P.ProjectEndDate AND F.PersonKey = PTO.PersonKey) PT
+		WHERE P.ProjectNumber != ''
+		GROUP BY F.ProjectKey
+	)
+
+	SELECT DISTINCT M.ProjectKey 
+	INTO #tmpProjectForecastShortFall
+	FROM MaxProjectForecastDates M 
+	JOIN dbo.DimProject P ON M.ProjectKey = P.ProjectKey
+	WHERE DATEADD(DAY, -2, P.ProjectEndDate) > M.EndDate;
+

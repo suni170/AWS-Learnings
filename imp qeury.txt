@@ -1,0 +1,21 @@
+Project URL123 = 
+VAR baseURL = "https://yourURL.com/webapp?"
+VAR projId =
+    COALESCE(SELECTEDVALUE('FactProjectContractDates'[DimProjectContract.ProjectId]), "")
+
+VAR projStart =
+    COALESCE(SELECTEDVALUE('FactProjectContractDates'[DimProjectContract.FromDate]), "")
+VAR wdStart =
+    COALESCE(SELECTEDVALUE('FactProjectContractDates'[DimProjectContract.FromDate]), "")
+VAR projEnd =
+    COALESCE(SELECTEDVALUE('FactProjectContractDates'[DimProjectContract.FromDate]), "")
+VAR wdEnd =
+    COALESCE(SELECTEDVALUE('FactProjectContractDates'[DimProjectContract.FromDate]), "")
+
+RETURN
+baseURL &
+"ProjectId=" & projId &
+"&ProjectStartDate=" & FORMAT(projStart, "yyyy-MM-dd") &
+"&WDContractStartDate=" & FORMAT(wdStart, "yyyy-MM-dd") &
+"&ProjectEndDate=" & FORMAT(projEnd, "yyyy-MM-dd") &
+"&WDContractEndDate=" & FORMAT(wdEnd, "yyyy-MM-dd")
