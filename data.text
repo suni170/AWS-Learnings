@@ -1,0 +1,35 @@
+Batch processing
+Streaming
+AI/Machine learning
+reporting and dasdhborads
+
+
+--------------------------------------------------
+Composite Key = Combination of existing fields.
+
+Surrogate Key = New artificial field created just for uniqueness.
+--------------------------------------------------
+df = spark.read.parquet("abfss://<container>@<storage_account>.dfs.core.windows.net/path/")
+
+---------------------------------------------------
+
+------------------------------------------------
+2. Explain the difference between COPY INTO and INSERT INTO.
+
+COPY INTO: Used to load bulk data from external files (like CSV, Parquet in OneLake/Blob). Best for ingestion.
+
+INSERT INTO: Used to insert data from another table or query inside Fabric. Best for small-scale inserts.
+---------------------------------------------
+
+
+How do you optimize query performance in Fabric Warehouse?
+
+Use partitioning to scan less data.
+
+Create indexes on frequently used columns.
+
+Avoid SELECT *, fetch only required columns.
+
+Use materialized views or caching for repeated queries.
+
+Ensure data distribution is even to avoid skew.

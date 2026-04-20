@@ -1,0 +1,11 @@
+1. can we delete a spark pool directly (if attached to the some notebooks)
+2. what kind of issues you faced in project?
+
+
+limitations:
+while loading data into central location. I got an error for the datatypes.
+clustered column store index will not support for the datatype(max)
+
+delta format will not support.
+1. when ever you are starting the spark pool it will take around 3 or 4 mins to start 
+2. 

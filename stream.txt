@@ -1,0 +1,11 @@
+Learn about the 
+custom endpoint
+lakehouse
+eventhouse
+stream
+activator
+
+
+kql for the eventhouse
+
+https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/add-source-custom-app?pivots=enhanced-capabilities

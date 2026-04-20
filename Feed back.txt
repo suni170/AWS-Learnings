@@ -1,0 +1,24 @@
+Assignment 1: 
+
+Worked with DAX functions such as SUM, IF, DATEDIFF, RELATED, and DIVIDE. For practice, explore a variety of commonly used intermediate-level DAX functions.
+
+
+Assignmeent 2: 
+
+Assignments looks good. Going forward 
+In Power BI reports, if there’s no text data, show “No Data Available,” and if it’s a number or money, show 0 or $0 instead of leaving it blank.
+
+For the hostpital Sample: 
+Use clear, meaningful names for models and reports. In reports, replace raw field names with descriptive titles that explain each visual’s purpose. Keep font sizes and styles consistent for a gook look. 
+
+Assignment 3:
+Completed assignments using DAX functions like LOOKUPVALUE, DATEDIFF, and SWITCH, along with Power Query steps such as Pivot, Unpivot, Append, and Group By. Also implemeted a Star Schema for the data model.
+
+
+Assignment 4:
+Created reports with drillthrough for details, applied conditional formatting with data bars and icons, added navigation buttons, and used different visuals, and applied effective color combinations for clear presentation.
+
+
+
+
+

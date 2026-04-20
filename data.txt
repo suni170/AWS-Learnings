@@ -1,0 +1,54 @@
+Assignment1:
+
+copy activity was created to transfer data from Blob Storage to Blob Storage using the binary format.
+
+Feedback for Improvement:
+Use clear and meaningful naming conventions for activities to better convey their purpose.
+
+
+
+Assignment2:
+
+copy activity was used to load data into a container using the binary format.
+
+Improvements:
+
+Explore different file formats (JSON, Parquet, Avro), compare their loading behavior, and understand when to apply each format effectively.
+
+
+Assignment3:
+
+Dynamic parameter passing was implemented for datasets, and a copy activity was successfully created to connect to on-premises services.
+
+Suggestions for Improvement:
+
+Store database passwords securely in Key Vault and reference them in the pipeline.
+Explore different loading methods for source and sink to enhance understanding.
+
+
+
+
+Assignment 4:
+
+The following activities were implemented: ForEach, Copy, Lookup, Switch, Web, Until, Get Metadata, Set, Wait, and Delete.
+
+
+Improvements:
+Explore Data Flows and try various transformations
+
+
+Assignment5:
+
+Triggers look good. Created tumbling and scheduled triggers to run pipeline.
+
+
+
+
+used the foreach and copy and lookup actities to load the data and used the dynamic folder structred using the parameters switch, web activity, until activity and getmetadata, set and wait, delete
+
+
+
+
+
+
+

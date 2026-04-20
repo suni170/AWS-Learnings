@@ -1,0 +1,12 @@
+
+Write efficient, scalable, and optimized SQL queries to extract, transform, and load data from multiple sources.
+Develop Python scripts for data processing, data validation, and automation of data engineering tasks.
+
+
+Exposure to NoSQL databases (Good to Have).
+
+
+fabric 
+sql
+data bricks(python)
+synapse

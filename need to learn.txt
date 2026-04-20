@@ -1,0 +1,33 @@
+ADF
+
+
+SQL
+PYTHON
+AZURE DEVOPS
+SYNAPSE
+AZURE DATA LAKE
+SSIS
+NO SQL DATABASE
+
+
+what is shallow copy and deep copy
+data vault architecture.
+
+
+Project 1
+issues:
+reuqirements frequently changes.
+from client side our team didn't get the proper access.  analysation.
+rework.
+
+Project 2
+issues:
+
+5. Debugging & Monitoring Limitations to see the exact error message.
+we two main piplines that will execute the all the brands pipline at the time logging the error is triky part. we tried log extract error message. but sometime any pipeline havin the any loops. if anything failed inside of it it will trow and error like."Pipeline failed due to inner pipeline activity failed"
+
+adocly working on different languages(web apis)
+
+
+
+adf: 
