@@ -1,0 +1,103 @@
+self intro:
+
+My name is Sunneetha, and I am a Data Engineer at Cognine Technologies.my experties lies in bio technology and life sciences domain where I have provided the data solutions using cloud services, like azure data factory, azure databricks, Azure synapse analytics, microsoft fabric azure sql database for storage and processing.
+
+
+I also have experience in Power BI for creating interactive reports and dashboards.Along with this, I have worked with Azure DevOps and GitHub for version control, CI/CD, and team collaboration.
+
+
+In my projects, I focus on designing scalable data pipelines, ensuring data quality and consistency, and optimizing performance to meet business needs effectively.
+
+
+
+Problem statement:
+
+Previously, the client did not have any Power BI reports implemented, which made it difficult to track and analyze business performance. To address this gap, the client initiated a requirement to build Power BI reports for better decision-making.
+
+Problem statement:
+I am responsible for extracting and consolidating data from multiple sources across different client systems and loading it into a centralized storage environment, making it available for the BI team. The client’s BI team then utilizes this data to create Power BI reports for their operational activities.
+
+
+Designed and developed data integration pipelines to bring data from multiple sources across different client systems and loading it into a centralized storage environment. 
+I also responsible for creating the datamarts in synapse 
+
+
+On the reporting side, the client already had a dedicated Power BI team. My role was mainly on the data engineering side. I only created two Power BI reports as part of specific requirements, but my primary work was on data engineering and preparing the data for those reports.”
+
+
+
+Problem statement:
+
+The client had data scattered across 17+ acquired companies, which made it difficult to access and manage. To solve this, we built a unified application that integrates data from multiple systems.so business users easily access it.
+
+Roles & Responsibilities:
+	Designed and developed data integration pipelines to bring data from multiple systems into the database.
+	Ensured data accuracy and consistency.
+	Collaborated with business users and stakeholders to gather requirements and deliver solutions.
+
+
+
+Problem Statement
+The client had two data sources — RS  and EMS . For ID mapping, they relied on Excel files to manually compare mapped and unmapped records, which was time-consuming, error-prone, and not scalable. The client needed a dynamic and automated solution to handle ID mapping and data integration efficiently.
+
+
+Roles & Responsibilities:
+	Designed and developed data integration pipelines to bring data from multiple systems into the centralized database.
+	Ensured data accuracy and consistency.
+	Collaborated with business users and stakeholders to gather requirements and deliver solutions.
+
+
+
+
+
+
+
+
+
+my current project is related energy and utilization consulting domain. The client was facing several issues in reporting and data management:
+
+Slow performance – Reports and data pipelines were taking too long due to inefficient processing.
+Incorrect calculations – Metrics and KPIs were not accurate because of faulty transformations or inconsistent data.
+Hardcoded pipelines – ETL/ELT processes were rigid and difficult to update.
+Data integration problems – Combining data from multiple sources like CRM and Workday was inconsistent.
+
+
+Roles and responsibilities: 
+
+Fix calculation errors and remove hardcoded values in the reports and pipelines.
+Improve the performance and responsiveness of existing reports.
+Load and integrate updated data from CRM and Workday.
+Create new reports as per business requirements.
+Ensure consistency, reliability, and accuracy of all reports for stakeholders
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------
+
+
+
+power bi 
+
+
+My name is Sunneetha, and I am a Power BI Developer. My expertise lies in the biotechnology and cybersecurity domains, where I have designed and developed interactive Power BI dashboards and reports that support data-driven decision-making. I use Power Query for data transformation, DAX for calculations, and I design efficient star-schema data models for better performance.
+
+In addition to Power BI, I have provided the data soulutions using cloud serivices,like Azure services such as Azure SQL Database, Azure Data Factory, and Azure Databricks to prepare and optimize data for reporting needs. I also use Azure DevOps and GitHub for version control, CI/CD, and team collaboration.
+
+In my projects, I focus on understanding business KPIs, ensuring data quality and consistency, and delivering meaningful insights that help teams make accurate and timely decisions.
+
+
+
+
