@@ -1,0 +1,70 @@
+Communication
+
+Performance:
+
+1. Actively shares information with teammates whenever needed.
+2. Communicating with clients and obtaining their approval for confirmations.
+3. Giving demos to clients as needed.
+
+
+Delivery:
+
+1. Delivered the work items on time.
+2. Followed the coding standards.
+3. created QA-handoff documents and design documents for user stories.
+4. created function app, to load gene data from NCBI to OneData.
+5. Wrote a SQL query to remove special characters from gene symbols and created the required tables and stored procedures to load and manage gene information efficiently.
+6. Designed and implemented an Azure Function App to efficiently retrieve gene data from the NCBI database by integrating with two APIs. The retrieved data was processed and seamlessly transferred to the Onedata.
+7. At the end of my project, I documented the progress on all current tasks and provided the documents to the clients.
+
+
+Learning & Development:
+
+1. Learned Synapse through practice and successfully submitted a practical implementation on Chorus.
+2. Learned power BI through practice and submitted a practical implementation on Chorus.
+3. Prepared for the DP-900 and got a certification.
+4. Working on a proof of concept (POC), The POC involves building a data pipeline in Synapse to process data through raw, bronze, silver, and gold layers, and creating Power BI visualizations from the filtered data.
+
+
+Analytical & Problem Solving:
+1. Analyzed the necessary gene fields information in the NCBI website as specified in the user story.
+2. Implemented both strategies to determine which was better.
+Approach 1: Downloaded data from NCBI, saved it locally, extracted required fields using SQL queries, and loaded the data into Blob Storage using ADF. Then, transferred the files to Bio-techne Blob Storage and created a pipeline to load data into gene tables in Onedata.
+Approach 2: Explored NCBI APIs to load data directly into the Onedata database using azure function app logic, achieving better performance. After demonstrating both approaches to the clients, they confirmed their preference for Approach 2.
+
+Performance:
+
+1. Plays an active part in team activities by contributing ideas and suggestions.
+2. Connected calls with Bio-Techne's data QA Radhika to better explain development work and clarify all queries she had.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

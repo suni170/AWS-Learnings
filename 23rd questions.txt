@@ -1,0 +1,8 @@
+956:
+
+I have updated the Resource indicator to be driven strictly based on the Resource field value.
+
+While reviewing the report, I observed that the other status image indicators — Scope, Schedule, Delivery Quality, Technology, Client, and Overall — are also using similar logic and are currently dependent on the Budget field.
+
+Could you please confirm whether we should proceed with updating these indicators as well so that each icon is driven only by its respective field?
+
